@@ -1,4 +1,4 @@
-package org.azavea.usaceflood.geoprocessing
+package org.azavea.usaceflood.server
 
 import com.typesafe.config.Config
 import org.apache.spark._
