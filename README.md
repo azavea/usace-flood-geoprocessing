@@ -48,7 +48,7 @@ Once that process is complete, try submitting a job to the `geoprocessing-contex
 
 ```bash
 $ curl --silent \
-    --data-binary "" \
+    --data "" \
     'http://localhost:8090/jobs?sync=true&context=geoprocessing-context&appName=geoprocessing&classPath=org.azavea.usaceflood.geoprocessing.SummaryJob'
 ```
 
