@@ -4,14 +4,65 @@ import geotrellis.vector._
 import geotrellis.raster._
 import geotrellis.raster.rasterize._
 import geotrellis.raster.op.zonal.summary._
+import geotrellis.spark._
 import geotrellis.spark.op.zonal.summary._
 
 import scala.collection.mutable
 
 import org.apache.spark._
 
-object PercentageFlooding {
-  class PercentageFloodingTileIntersectionHandler(min: Int, floodLevels: Seq[Double]) extends TileIntersectionHandler[(Map[Double, Long], Long)] {
+object FloodPercentages {
+  /** Takes a polygon and a sequence of flood levels (in meters).
+    * Returns the percentage of the polygon that will be flooded under
+    * each corresponding level.
+    * 
+    * @param       polygon       Polygon in EPSG:4269
+    * @param       floodLevels   Flood levels in meters.
+    * 
+    * @return      A mapping between the flood levels and the percentages of the polygon covered in flood water.
+    */
+  def apply(polygon: Polygon, floodLevels: Seq[Double])(implicit sc: SparkContext): Map[Double, Double] = {
+    val rdd = ElevationData(polygon)
+    val (minElevation, _) = rdd.minMax
+    calculate(rdd, polygon, floodLevels, minElevation)
+  }
+
+  /** Takes a polygon and a sequence of flood levels (in meters).
+    * Returns the percentage of the polygon that will be flooded under
+    * each corresponding level.
+    * 
+    * @param       polygon       Polygon in EPSG:4269
+    * @param       floodLevels   Flood levels in meters.
+    * @param       minElevation  The minimum elevation of the cells contained within this polygon.
+    * 
+    * @return      A mapping between the flood levels and the percentages of the polygon covered in flood water.
+    */
+  def apply(polygon: Polygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[Double, Double] = {
+    val rdd = ElevationData(polygon)
+    calculate(rdd, polygon, floodLevels, minElevation)
+  }
+
+  private def calculate(rdd: RasterRDD[SpatialKey], polygon: Polygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[Double, Double] = {
+    val rdd = ElevationData(polygon)
+
+    val (floodedCounts, totalCount) =
+      rdd.zonalSummary(polygon, (Map[Double, Long](), 0L), new FloodPercentagesTileIntersectionHandler(minElevation, floodLevels))
+
+    floodLevels
+      .map { level =>
+        val percentage = 
+          floodedCounts.get(level) match {
+            case Some(floodedCount) =>
+              floodedCount / totalCount.toDouble
+            case None =>
+              0.0
+          }
+        (level, percentage)
+      }
+      .toMap
+  }
+
+  class FloodPercentagesTileIntersectionHandler(minElevation: Double, floodLevels: Seq[Double]) extends TileIntersectionHandler[(Map[Double, Long], Long)] {
     // Sort the flood levels in descending order so we can optimize checking flooded cells
     val fl = floodLevels.sorted.reverse.toArray
     val floodLevelCount = fl.length
@@ -30,9 +81,10 @@ object PercentageFlooding {
           var i = 0
           while(i < floodLevelCount) {
             val level = fl(i)
-            if(z - min < level) {
+            if(z - minElevation < level) {
               // This pixel is flooded under this level
               floodedCounts(level) += 1
+              i += 1
             } else {
               // This pixel isn't flooded under this level,
               // also not flooded by any lower level, so break
@@ -55,7 +107,7 @@ object PercentageFlooding {
           var i = 0
           while(i < floodLevelCount) {
             val level = fl(i)
-            if(z - min < level) {
+            if(z - minElevation < level) {
               // This pixel is flooded under this level
               floodedCounts(level) += 1
             } else {
@@ -86,36 +138,5 @@ object PercentageFlooding {
 
       (totalMap, totalCount)
     }
-  }
-
-  /** Takes a polygon and a sequence of flood levels (in meters).
-    * Returns the percentage of the polygon that will be flooded under
-    * each corresponding level.
-    * 
-    * @param       polygon       Polygon in EPSG:4269
-    * @param       floodLevels   Flood levels in meters.
-    * 
-    * @return      A mapping between the flood levels and the percentages of the polygon covered in flood water.
-    */
-  def apply(polygon: Polygon, floodLevels: Seq[Double])(implicit sc: SparkContext): Map[Double, Double] = {
-    val rdd = ElevationData(polygon)
-
-    val (min, _) = rdd.minMax
-
-    val (floodedCounts, totalCount) =
-      rdd.zonalSummary(polygon, (Map[Double, Long](), 0L), new PercentageFloodingTileIntersectionHandler(min, floodLevels))
-
-    floodLevels
-      .map { level =>
-        val percentage = 
-          floodedCounts.get(level) match {
-            case Some(floodedCount) =>
-              floodedCount / totalCount.toDouble
-            case None =>
-              0.0
-          }
-        (level, percentage)
-      }
-      .toMap
   }
 }

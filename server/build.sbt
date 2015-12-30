@@ -9,10 +9,11 @@ javaOptions += "-Djava.library.path=/usr/local/lib"
 libraryDependencies ++= Seq(
   "com.azavea.geotrellis" %% "geotrellis-spark" % Version.geotrellis,
   "com.azavea.geotrellis" %% "geotrellis-testkit" % Version.geotrellis % "test",
+  "io.spray"        %% "spray-routing" % "1.3.3",
+  "io.spray"        %% "spray-can" % "1.3.3",
   "org.scalatest" %% "scalatest" % Version.scalatest % "test",
   "org.apache.spark" %% "spark-core" % Version.spark % "provided",
-  "org.apache.hadoop" % "hadoop-client" % Version.hadoop % "provided",
-  "spark.jobserver" %% "job-server-api" % Version.jobserver % "provided"
+  "org.apache.hadoop" % "hadoop-client" % Version.hadoop % "provided"
 )
 
 assemblyMergeStrategy in assembly := {
