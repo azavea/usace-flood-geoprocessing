@@ -1,6 +1,7 @@
 package org.azavea.usaceflood.server
 
 import geotrellis.vector._
+import geotrellis.spark.op.zonal.summary._
 
 import org.apache.spark._
 
@@ -13,5 +14,5 @@ object MinElevation {
     * @return      Elevation in meters
     */
   def apply(polygon: Polygon)(implicit sc: SparkContext): Double =
-    ElevationData(polygon).minMax._1
+    ElevationData(polygon).zonalMin(polygon)
 }
