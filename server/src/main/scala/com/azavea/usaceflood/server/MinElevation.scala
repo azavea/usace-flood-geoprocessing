@@ -1,4 +1,4 @@
-package org.azavea.usaceflood.server
+package com.azavea.usaceflood.server
 
 import geotrellis.vector._
 import geotrellis.spark.op.zonal.summary._

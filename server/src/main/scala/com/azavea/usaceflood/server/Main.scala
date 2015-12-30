@@ -1,4 +1,4 @@
-package org.azavea.usaceflood.server
+package com.azavea.usaceflood.server
 
 import akka.actor._
 import akka.io.IO

@@ -26,7 +26,7 @@
 //     shellPrompt := { s => Project.extract(s).currentProject.id + " > " },
 //     version := "0.0.1",
 //     scalaVersion := Version.scala,
-//     organization := "org.azavea.usaceflood.geoprocessing",
+//     organization := "com.azavea.usaceflood.geoprocessing",
 
 //     // disable annoying warnings about 2.10.x
 //     conflictWarning in ThisBuild := ConflictWarning.disable,
@@ -79,7 +79,7 @@
 
 //   lazy val summarySettings =
 //     Seq(
-//       organization := "org.azavea.usaceflood.geoprocessing",
+//       organization := "com.azavea.usaceflood.geoprocessing",
 //       name := "usaceflood-geoprocessing",
 
 //       scalaVersion := Version.scala,

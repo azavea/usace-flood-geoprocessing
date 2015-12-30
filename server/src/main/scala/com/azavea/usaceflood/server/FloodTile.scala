@@ -1,4 +1,4 @@
-package org.azavea.usaceflood.server
+package com.azavea.usaceflood.server
 
 import geotrellis.vector._
 import geotrellis.raster._
@@ -15,7 +15,7 @@ object FloodTile {
     * 
     * @param       polygon       Polygon in EPSG:4269
     * @param       minElevation  Minimum elevation under this polygon
-    * @param       minElevation  Flood level to use for determing cell flooding
+    * @param       floodLevel    Flood level to use for determining cell flooding
     * 
     * @return      Tile with flood level of each flooded cell, NoData if the cell is not flooded.
     */

@@ -1,4 +1,4 @@
-package org.azavea.usaceflood.server
+package com.azavea.usaceflood.server
 
 import geotrellis.proj4._
 import geotrellis.vector._

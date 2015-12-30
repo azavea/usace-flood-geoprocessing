@@ -71,7 +71,7 @@ object ZoomedLayerIngest extends Ingest{
   def main(args: Array[String]): Unit = {
     require(args.length == 2, "Usage: ZoomedLayerIngest INPUT_GEOTIFF_PATH OUTPUT_CATALOG_PATH")
 
-    val layoutScheme = ZoomedLayoutScheme(WebMercator, tileSize = 512)
+    val layoutScheme = ZoomedLayoutScheme(WebMercator, tileSize = 256)
 
     val inputPath = s"file://${new File(args(0)).getAbsolutePath}"
     val outputPath = s"file://${new File(args(1)).getAbsolutePath}"

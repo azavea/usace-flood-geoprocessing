@@ -1,4 +1,4 @@
-package org.azavea.usaceflood.server
+package com.azavea.usaceflood.server
 
 import geotrellis.vector._
 import geotrellis.raster._
@@ -21,7 +21,7 @@ object FloodPercentages {
     * 
     * @return      A mapping between the flood levels and the percentages of the polygon covered in flood water.
     */
-  def apply(polygon: Polygon, floodLevels: Seq[Double])(implicit sc: SparkContext): Map[Double, Double] = {
+  def apply(polygon: Polygon, floodLevels: Seq[Double])(implicit sc: SparkContext): Map[String, Double] = {
     val rdd = ElevationData(polygon)
     val (minElevation, _) = rdd.minMax
     calculate(rdd, polygon, floodLevels, minElevation)
@@ -37,12 +37,12 @@ object FloodPercentages {
     * 
     * @return      A mapping between the flood levels and the percentages of the polygon covered in flood water.
     */
-  def apply(polygon: Polygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[Double, Double] = {
+  def apply(polygon: Polygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[String, Double] = {
     val rdd = ElevationData(polygon)
     calculate(rdd, polygon, floodLevels, minElevation)
   }
 
-  private def calculate(rdd: RasterRDD[SpatialKey], polygon: Polygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[Double, Double] = {
+  private def calculate(rdd: RasterRDD[SpatialKey], polygon: Polygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[String, Double] = {
     val rdd = ElevationData(polygon)
 
     val (floodedCounts, totalCount) =
@@ -57,7 +57,7 @@ object FloodPercentages {
             case None =>
               0.0
           }
-        (level, percentage)
+        (level.toString, percentage)
       }
       .toMap
   }
@@ -70,7 +70,7 @@ object FloodPercentages {
     def handlePartialTile(raster: Raster, intersection: Polygon): (Map[Double, Long], Long) = {
       val tile = raster.tile
 
-      val floodedCounts = mutable.Map[Double, Long]()
+      val floodedCounts = mutable.Map[Double, Long]().withDefaultValue(0)
       var count = 0L
 
       Rasterizer.foreachCellByPolygon(intersection, raster.rasterExtent) { (col, row) =>
@@ -99,7 +99,7 @@ object FloodPercentages {
     }
 
     def handleFullTile(tile: Tile): (Map[Double, Long], Long) = {
-      val floodedCounts = mutable.Map[Double, Long]()
+      val floodedCounts = mutable.Map[Double, Long]().withDefaultValue(0)
       var count = 0L
       tile.foreachDouble { z =>
         if(isData(z)) {

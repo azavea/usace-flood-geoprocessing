@@ -1,4 +1,4 @@
-package org.azavea.usaceflood.server
+package com.azavea.usaceflood.server
 
 import geotrellis.proj4.WebMercator
 import geotrellis.vector._
@@ -12,7 +12,7 @@ import org.apache.spark._
 
 object ElevationData {
   val localPath = "data/catalog"
-  val path = "file://{new java.io.File(localPath).getAbsolutePath}"
+  val path = s"file://${new java.io.File(localPath).getAbsolutePath}"
 
   private val wmLayoutScheme = ZoomedLayoutScheme(WebMercator, tileSize = 256)
 
