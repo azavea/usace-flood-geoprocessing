@@ -39,9 +39,9 @@ Now that the SJS service is running in the background, upload the assembly JAR a
 ```bash
 $ curl --silent \
     --data-binary @summary/target/scala-2.10/usaceflood-geoprocessing-assembly-0.0.1.jar \
-    'http://localhost:8090/jars/geoprocessing'
+    "http://localhost:8090/jars/geoprocessing"
 $ curl --silent --data "" \
-    'http://localhost:8090/contexts/geoprocessing-context'
+    "http://localhost:8090/contexts/geoprocessing-context"
 ```
 
 Once that process is complete, try submitting a job to the `geoprocessing-context`:
@@ -49,7 +49,18 @@ Once that process is complete, try submitting a job to the `geoprocessing-contex
 ```bash
 $ curl --silent \
     --data "" \
-    'http://localhost:8090/jobs?sync=true&context=geoprocessing-context&appName=geoprocessing&classPath=org.azavea.usaceflood.geoprocessing.SummaryJob'
+    "http://localhost:8090/jobs?sync=true&context=geoprocessing-context&appName=geoprocessing&classPath=org.azavea.usaceflood.geoprocessing.SummaryJob"
+```
+
+#### Note:
+
+If you are using docker-machine to host the docker container, then be sure to use the correct IP address in the above curl statements:
+
+```bash
+$ export DOCKER_IP=`docker-machine ip $DOCKER_MACHINE_NAME`
+$ curl --silent \
+    --data-binary @summary/target/scala-2.10/usaceflood-geoprocessing-assembly-0.0.1.jar \
+    "http://$DOCKER_IP:8090/jars/geoprocessing"
 ```
 
 ## Deployments
