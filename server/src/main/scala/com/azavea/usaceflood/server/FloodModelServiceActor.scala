@@ -25,6 +25,7 @@ import scala.concurrent._
 
 class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
   import scala.concurrent.ExecutionContext.Implicits.global
+  import JsonProtocol._
 
   implicit val _sc = sc
 
@@ -52,10 +53,10 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
     cors {
       import spray.json.DefaultJsonProtocol._
 
-      parameters('polygon) { (geojson) =>
+      entity(as[minElevationArgs]) { (args) =>
         complete {
           future {
-            val polygon = geojson.parseGeoJson[Polygon].reproject(LatLng, nativeCRS)
+            val polygon = args.polygon.toString().parseGeoJson[Polygon].reproject(LatLng, nativeCRS)
             JsObject(
               "minElevation" -> JsNumber(MinElevation(polygon))
             )
@@ -68,12 +69,11 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
     cors {
       import spray.json.DefaultJsonProtocol._
 
-      parameters('polygon, 'minElevation.as[Double], 'floodLevels) { (geojson, minElevation, floodLevelsString) =>
+      entity(as[floodPercentagesArgs]) { (args) =>
         complete {
           future {
-            val polygon = geojson.parseGeoJson[Polygon].reproject(LatLng, nativeCRS)
-            val floodLevels = floodLevelsString.split(',').map(_.toDouble)
-            FloodPercentages(polygon, floodLevels, minElevation)
+            val polygon = args.polygon.toString().parseGeoJson[Polygon].reproject(LatLng, nativeCRS)
+            FloodPercentages(polygon, args.floodLevels, args.minElevation)
           }
         }
       }
@@ -81,17 +81,17 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
 
   def floodTilesRoute =
     pathPrefix(IntNumber / IntNumber / IntNumber) { (zoom, x, y) =>
-      parameters('polygon, 'minElevation.as[Double], 'floodLevel.as[Double]) { (geojson, minElevation, floodLevel) =>
+      entity(as[floodTilesArgs]) { (args) =>
         respondWithMediaType(MediaTypes.`image/png`) {
           complete {
             future {
 
-              val polygon = geojson.parseGeoJson[Polygon].reproject(LatLng, WebMercator)
+              val polygon = args.polygon.toString().parseGeoJson[Polygon].reproject(LatLng, WebMercator)
               val key = SpatialKey(x, y)
 
               ElevationData(zoom, key, polygon) match {
                 case Some(tile) =>
-                  val floodTile = FloodTile(tile, polygon, minElevation, floodLevel)
+                  val floodTile = FloodTile(tile, polygon, args.minElevation, args.floodLevel)
 
                   // Paint the tile
 
