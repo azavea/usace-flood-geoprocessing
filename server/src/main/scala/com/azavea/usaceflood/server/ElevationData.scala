@@ -11,7 +11,7 @@ import geotrellis.spark.tiling._
 import org.apache.spark._
 
 object ElevationData {
-  val localPath = "data/catalog"
+  val localPath = "/flood-data/catalog"
   val path = s"file://${new java.io.File(localPath).getAbsolutePath}"
 
   private val wmLayoutScheme = ZoomedLayoutScheme(WebMercator, tileSize = 256)
