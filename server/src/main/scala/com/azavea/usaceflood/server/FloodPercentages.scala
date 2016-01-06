@@ -110,6 +110,7 @@ object FloodPercentages {
             if(z - minElevation < level) {
               // This pixel is flooded under this level
               floodedCounts(level) += 1
+              i += 1
             } else {
               // This pixel isn't flooded under this level,
               // also not flooded by any lower level, so break
