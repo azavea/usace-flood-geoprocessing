@@ -9,10 +9,10 @@ object MinElevation {
   /** Takes a polygon and returns the elevation of the lowest cell
     * within the polygon.
     * 
-    * @param       polygon       Polygon in EPSG:4269
+    * @param       multiPolygon  MultiPolygon in EPSG:4269
     * 
     * @return      Elevation in meters
     */
-  def apply(polygon: Polygon)(implicit sc: SparkContext): Double =
-    ElevationData(polygon).zonalMin(polygon)
+  def apply(multiPolygon: MultiPolygon)(implicit sc: SparkContext): Double =
+    ElevationData(multiPolygon).zonalMin(multiPolygon)
 }

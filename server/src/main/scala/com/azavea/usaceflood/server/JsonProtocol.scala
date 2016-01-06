@@ -3,9 +3,9 @@ package com.azavea.usaceflood.server
 import spray.httpx.SprayJsonSupport
 import spray.json._
 
-case class minElevationArgs (polygon: JsObject)
-case class floodPercentagesArgs (polygon: JsObject, minElevation: Double, floodLevels: Array[Double])
-case class floodTilesArgs (polygon: JsObject, minElevation: Double, floodLevel: Double)
+case class minElevationArgs (multiPolygon: JsObject)
+case class floodPercentagesArgs (multiPolygon: JsObject, minElevation: Double, floodLevels: Array[Double])
+case class floodTilesArgs (multiPolygon: JsObject, minElevation: Double, floodLevel: Double)
 
 object JsonProtocol extends SprayJsonSupport {
   import DefaultJsonProtocol._

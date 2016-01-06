@@ -56,9 +56,9 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
       entity(as[minElevationArgs]) { (args) =>
         complete {
           future {
-            val polygon = args.polygon.toString().parseGeoJson[Polygon].reproject(LatLng, nativeCRS)
+            val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, nativeCRS)
             JsObject(
-              "minElevation" -> JsNumber(MinElevation(polygon))
+              "minElevation" -> JsNumber(MinElevation(multiPolygon))
             )
           }
         }
@@ -72,8 +72,8 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
       entity(as[floodPercentagesArgs]) { (args) =>
         complete {
           future {
-            val polygon = args.polygon.toString().parseGeoJson[Polygon].reproject(LatLng, nativeCRS)
-            FloodPercentages(polygon, args.floodLevels, args.minElevation)
+            val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, nativeCRS)
+            FloodPercentages(multiPolygon, args.floodLevels, args.minElevation)
           }
         }
       }
@@ -86,12 +86,12 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
           complete {
             future {
 
-              val polygon = args.polygon.toString().parseGeoJson[Polygon].reproject(LatLng, WebMercator)
+              val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, WebMercator)
               val key = SpatialKey(x, y)
 
-              ElevationData(zoom, key, polygon) match {
+              ElevationData(zoom, key, multiPolygon) match {
                 case Some(tile) =>
-                  val floodTile = FloodTile(tile, polygon, args.minElevation, args.floodLevel)
+                  val floodTile = FloodTile(tile, multiPolygon, args.minElevation, args.floodLevel)
 
                   // Paint the tile
 

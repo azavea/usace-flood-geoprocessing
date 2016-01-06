@@ -12,41 +12,41 @@ import scala.collection.mutable
 import org.apache.spark._
 
 object FloodPercentages {
-  /** Takes a polygon and a sequence of flood levels (in meters).
-    * Returns the percentage of the polygon that will be flooded under
+  /** Takes a multiPolygon and a sequence of flood levels (in meters).
+    * Returns the percentage of the multiPolygon that will be flooded under
     * each corresponding level.
     * 
-    * @param       polygon       Polygon in EPSG:4269
+    * @param       multiPolygon  MultiPolygon in EPSG:4269
     * @param       floodLevels   Flood levels in meters.
     * 
     * @return      A mapping between the flood levels and the percentages of the polygon covered in flood water.
     */
-  def apply(polygon: Polygon, floodLevels: Seq[Double])(implicit sc: SparkContext): Map[String, Double] = {
-    val rdd = ElevationData(polygon)
+  def apply(multiPolygon: MultiPolygon, floodLevels: Seq[Double])(implicit sc: SparkContext): Map[String, Double] = {
+    val rdd = ElevationData(multiPolygon)
     val (minElevation, _) = rdd.minMax
-    calculate(rdd, polygon, floodLevels, minElevation)
+    calculate(rdd, multiPolygon, floodLevels, minElevation)
   }
 
   /** Takes a polygon and a sequence of flood levels (in meters).
     * Returns the percentage of the polygon that will be flooded under
     * each corresponding level.
     * 
-    * @param       polygon       Polygon in EPSG:4269
+    * @param       multiPolygon  MultiPolygon in EPSG:4269
     * @param       floodLevels   Flood levels in meters.
     * @param       minElevation  The minimum elevation of the cells contained within this polygon.
     * 
     * @return      A mapping between the flood levels and the percentages of the polygon covered in flood water.
     */
-  def apply(polygon: Polygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[String, Double] = {
-    val rdd = ElevationData(polygon)
-    calculate(rdd, polygon, floodLevels, minElevation)
+  def apply(multiPolygon: MultiPolygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[String, Double] = {
+    val rdd = ElevationData(multiPolygon)
+    calculate(rdd, multiPolygon, floodLevels, minElevation)
   }
 
-  private def calculate(rdd: RasterRDD[SpatialKey], polygon: Polygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[String, Double] = {
-    val rdd = ElevationData(polygon)
+  private def calculate(rdd: RasterRDD[SpatialKey], multiPolygon: MultiPolygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[String, Double] = {
+    val rdd = ElevationData(multiPolygon)
 
     val (floodedCounts, totalCount) =
-      rdd.zonalSummary(polygon, (Map[Double, Long](), 0L), new FloodPercentagesTileIntersectionHandler(minElevation, floodLevels))
+      rdd.zonalSummary(multiPolygon, (Map[Double, Long](), 0L), new FloodPercentagesTileIntersectionHandler(minElevation, floodLevels))
 
     floodLevels
       .map { level =>
@@ -135,7 +135,6 @@ object FloodPercentages {
         merged
           .groupBy(_._1)
           .map { case (key, value) => (key, value.map(_._2).sum) }
-          .toMap
 
       (totalMap, totalCount)
     }
