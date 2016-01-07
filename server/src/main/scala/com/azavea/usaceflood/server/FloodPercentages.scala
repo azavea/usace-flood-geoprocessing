@@ -21,7 +21,7 @@ object FloodPercentages {
     * 
     * @return      A mapping between the flood levels and the percentages of the polygon covered in flood water.
     */
-  def apply(multiPolygon: MultiPolygon, floodLevels: Seq[Double])(implicit sc: SparkContext): Map[String, Double] = {
+  def apply(multiPolygon: MultiPolygon, floodLevels: Seq[Double])(implicit sc: SparkContext): Seq[Double] = {
     val rdd = ElevationData(multiPolygon)
     val (minElevation, _) = rdd.minMax
     calculate(rdd, multiPolygon, floodLevels, minElevation)
@@ -35,14 +35,14 @@ object FloodPercentages {
     * @param       floodLevels   Flood levels in meters.
     * @param       minElevation  The minimum elevation of the cells contained within this polygon.
     * 
-    * @return      A mapping between the flood levels and the percentages of the polygon covered in flood water.
+    * @return      Array of percentage of polygon flooded at corresponding flood level in input array.
     */
-  def apply(multiPolygon: MultiPolygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[String, Double] = {
+  def apply(multiPolygon: MultiPolygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Seq[Double] = {
     val rdd = ElevationData(multiPolygon)
     calculate(rdd, multiPolygon, floodLevels, minElevation)
   }
 
-  private def calculate(rdd: RasterRDD[SpatialKey], multiPolygon: MultiPolygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Map[String, Double] = {
+  private def calculate(rdd: RasterRDD[SpatialKey], multiPolygon: MultiPolygon, floodLevels: Seq[Double], minElevation: Double)(implicit sc: SparkContext): Seq[Double] = {
     val rdd = ElevationData(multiPolygon)
 
     val (floodedCounts, totalCount) =
@@ -50,16 +50,13 @@ object FloodPercentages {
 
     floodLevels
       .map { level =>
-        val percentage = 
           floodedCounts.get(level) match {
             case Some(floodedCount) =>
               floodedCount / totalCount.toDouble
             case None =>
               0.0
           }
-        (level.toString, percentage)
       }
-      .toMap
   }
 
   class FloodPercentagesTileIntersectionHandler(minElevation: Double, floodLevels: Seq[Double]) extends TileIntersectionHandler[(Map[Double, Long], Long)] {
