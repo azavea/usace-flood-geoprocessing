@@ -20,18 +20,18 @@ object ElevationData {
 
   private val wmLayoutScheme = ZoomedLayoutScheme(WebMercator, tileSize = 256)
 
-  // Polygon is in EPSG:4269
-  def apply(polygon: Polygon)(implicit sc: SparkContext): RasterRDD[SpatialKey] =
+  // MultiPolygon is in EPSG:4269
+  def apply(multiPolygon: MultiPolygon)(implicit sc: SparkContext): RasterRDD[SpatialKey] =
     HadoopLayerReader.spatial(path)
       .query(LayerId(dem10mLayer, 0))
-      .where(Intersects(polygon.envelope))
+      .where(Intersects(multiPolygon.envelope))
       .toRDD
 
-  /** Returns a tile if it intersects with this polygon (Web Mercator) */
-  def apply(zoom: Int, key: SpatialKey, polygon: Polygon)(implicit sc: SparkContext): Option[Tile] = {
+  /** Returns a tile if it intersects with this multiPolygon (Web Mercator) */
+  def apply(zoom: Int, key: SpatialKey, multiPolygon: MultiPolygon)(implicit sc: SparkContext): Option[Tile] = {
     val transform = MapKeyTransform(WebMercator, wmLayoutScheme.levelForZoom(zoom))
     val extent = transform(key)
-    if(extent.intersects(polygon)) {
+    if(extent.intersects(multiPolygon)) {
       Some(apply(zoom, key))
     } else {
       None

@@ -56,9 +56,9 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
       entity(as[minElevationArgs]) { (args) =>
         complete {
           future {
-            val polygon = args.polygon.toString().parseGeoJson[Polygon].reproject(LatLng, nativeCRS)
+            val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, nativeCRS)
             JsObject(
-              "minElevation" -> JsNumber(MinElevation(polygon))
+              "minElevation" -> JsNumber(MinElevation(multiPolygon))
             )
           }
         }
@@ -72,33 +72,35 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
       entity(as[floodPercentagesArgs]) { (args) =>
         complete {
           future {
-            val polygon = args.polygon.toString().parseGeoJson[Polygon].reproject(LatLng, nativeCRS)
-            FloodPercentages(polygon, args.floodLevels, args.minElevation)
+            val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, nativeCRS)
+            FloodPercentages(multiPolygon, args.floodLevels, args.minElevation)
           }
         }
       }
     }
 
   def floodTilesRoute =
-    pathPrefix(IntNumber / IntNumber / IntNumber) { (zoom, x, y) =>
-      entity(as[floodTilesArgs]) { (args) =>
-        respondWithMediaType(MediaTypes.`image/png`) {
-          complete {
-            future {
+    rejectEmptyResponse {
+      pathPrefix(IntNumber / IntNumber / IntNumber) { (zoom, x, y) =>
+        entity(as[floodTilesArgs]) { (args) =>
+          respondWithMediaType(MediaTypes.`image/png`) {
+            complete {
+              future {
 
-              val polygon = args.polygon.toString().parseGeoJson[Polygon].reproject(LatLng, WebMercator)
-              val key = SpatialKey(x, y)
+                val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, WebMercator)
+                val key = SpatialKey(x, y)
 
-              ElevationData(zoom, key, polygon) match {
-                case Some(tile) =>
-                  val floodTile = FloodTile(tile, polygon, args.minElevation, args.floodLevel)
+                ElevationData(zoom, key, multiPolygon) match {
+                  case Some(tile) =>
+                    val floodTile = FloodTile(tile, multiPolygon, args.minElevation, args.floodLevel)
 
-                  // Paint the tile
+                    // Paint the tile
+                    val justBlueRamp = ColorRamp.createWithRGBColors(0x0000FF).setAlpha(127)
+                    floodTile.renderPng(justBlueRamp).bytes
 
-                  floodTile.renderPng(ColorRamps.BlueToRed).bytes
-
-                case None =>
-                  Array[Byte]()
+                  case None =>
+                    Array[Byte]()
+                }
               }
             }
           }
