@@ -80,25 +80,27 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
     }
 
   def floodTilesRoute =
-    pathPrefix(IntNumber / IntNumber / IntNumber) { (zoom, x, y) =>
-      entity(as[floodTilesArgs]) { (args) =>
-        respondWithMediaType(MediaTypes.`image/png`) {
-          complete {
-            future {
+    rejectEmptyResponse {
+      pathPrefix(IntNumber / IntNumber / IntNumber) { (zoom, x, y) =>
+        entity(as[floodTilesArgs]) { (args) =>
+          respondWithMediaType(MediaTypes.`image/png`) {
+            complete {
+              future {
 
-              val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, WebMercator)
-              val key = SpatialKey(x, y)
+                val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, WebMercator)
+                val key = SpatialKey(x, y)
 
-              ElevationData(zoom, key, multiPolygon) match {
-                case Some(tile) =>
-                  val floodTile = FloodTile(tile, multiPolygon, args.minElevation, args.floodLevel)
+                ElevationData(zoom, key, multiPolygon) match {
+                  case Some(tile) =>
+                    val floodTile = FloodTile(tile, multiPolygon, args.minElevation, args.floodLevel)
 
-                  // Paint the tile
-                  val justBlueRamp = ColorRamp.createWithRGBColors(0x0000FF).setAlpha(127)
-                  floodTile.renderPng(justBlueRamp).bytes
+                    // Paint the tile
+                    val justBlueRamp = ColorRamp.createWithRGBColors(0x0000FF).setAlpha(127)
+                    floodTile.renderPng(justBlueRamp).bytes
 
-                case None =>
-                  Array[Byte]()
+                  case None =>
+                    Array[Byte]()
+                }
               }
             }
           }
