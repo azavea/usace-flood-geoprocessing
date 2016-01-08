@@ -92,7 +92,7 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
 
                 ElevationData(zoom, key, multiPolygon) match {
                   case Some(tile) =>
-                    val floodTile = FloodTile(tile, multiPolygon, args.minElevation, args.floodLevel)
+                    val floodTile = FloodTile(tile, zoom, key, multiPolygon, args.minElevation, args.floodLevel)
 
                     // Paint the tile
                     val justBlueRamp = ColorRamp.createWithRGBColors(0x0000FF).setAlpha(127)
