@@ -3,10 +3,7 @@ package com.azavea.usaceflood.server
 import geotrellis.vector._
 import geotrellis.raster._
 import geotrellis.raster.op.local._
-import geotrellis.raster.render._
 import geotrellis.spark._
-
-import scala.collection.mutable
 
 import org.apache.spark._
 
@@ -35,4 +32,3 @@ object FloodTile {
     }
   }
 }
-

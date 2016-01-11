@@ -4,19 +4,15 @@ import geotrellis.proj4._
 import geotrellis.vector._
 import geotrellis.vector.io.json._
 import geotrellis.vector.reproject._
-import geotrellis.raster._
 import geotrellis.raster.render._
 import geotrellis.spark._
 
 import akka.actor._
 
 import spray.routing._
-import spray.http.MediaTypes
 import spray.http.HttpHeaders._
 import spray.http.HttpMethods._
 import spray.http.{ AllOrigins, MediaTypes }
-import spray.http.{ HttpMethods, HttpMethod, HttpResponse, AllOrigins }
-import spray.httpx.SprayJsonSupport._
 import spray.json._
 
 import org.apache.spark._
