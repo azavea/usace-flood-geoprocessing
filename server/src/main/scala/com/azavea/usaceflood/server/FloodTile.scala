@@ -25,7 +25,7 @@ object FloodTile {
 
     maskedTile.mapDouble { z =>
       if (isData(z) && z - minElevation < floodLevel) {
-        z - minElevation
+        floodLevel - (z - minElevation)
       } else {
         Double.NaN
       }

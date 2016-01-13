@@ -91,8 +91,17 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
                     val floodTile = FloodTile(tile, zoom, key, multiPolygon, args.minElevation, args.floodLevel)
 
                     // Paint the tile
-                    val justBlueRamp = ColorRamp.createWithRGBColors(0x0000FF).setAlpha(127)
-                    floodTile.renderPng(justBlueRamp).bytes
+                    val breaks = ColorBreaks.fromStringDouble(
+                      """0.0000:c2dae8b3;
+                        |0.3048:a0bcd9b3;
+                        |0.6096:7c9fc7b3;
+                        |0.9144:4b81b3b3;
+                        |1.2192:2c6ca0b3;
+                        |1.5240:3d5485b3;
+                        |3.0480:414273b3;
+                        |4.5720:393264b3;
+                        |1000.0:393264b3;""".stripMargin).get
+                    floodTile.renderPng(breaks).bytes
 
                   case None =>
                     Array[Byte]()
