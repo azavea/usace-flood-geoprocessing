@@ -4,19 +4,15 @@ import geotrellis.proj4._
 import geotrellis.vector._
 import geotrellis.vector.io.json._
 import geotrellis.vector.reproject._
-import geotrellis.raster._
 import geotrellis.raster.render._
 import geotrellis.spark._
 
 import akka.actor._
 
 import spray.routing._
-import spray.http.MediaTypes
 import spray.http.HttpHeaders._
 import spray.http.HttpMethods._
 import spray.http.{ AllOrigins, MediaTypes }
-import spray.http.{ HttpMethods, HttpMethod, HttpResponse, AllOrigins }
-import spray.httpx.SprayJsonSupport._
 import spray.json._
 
 import org.apache.spark._
@@ -92,7 +88,7 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
 
                 ElevationData(zoom, key, multiPolygon) match {
                   case Some(tile) =>
-                    val floodTile = FloodTile(tile, multiPolygon, args.minElevation, args.floodLevel)
+                    val floodTile = FloodTile(tile, zoom, key, multiPolygon, args.minElevation, args.floodLevel)
 
                     // Paint the tile
                     val justBlueRamp = ColorRamp.createWithRGBColors(0x0000FF).setAlpha(127)
