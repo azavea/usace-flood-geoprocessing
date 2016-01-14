@@ -4,6 +4,7 @@ import geotrellis.proj4._
 import geotrellis.vector._
 import geotrellis.vector.io.json._
 import geotrellis.vector.reproject._
+import geotrellis.raster._
 import geotrellis.raster.render._
 import geotrellis.spark._
 
@@ -103,7 +104,7 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
                   floodTile.renderPng(breaks).bytes
 
                 case None =>
-                  Array[Byte]()
+                  ArrayTile.empty(TypeByte, 256, 256).renderPng().bytes
               }
             }
           }
