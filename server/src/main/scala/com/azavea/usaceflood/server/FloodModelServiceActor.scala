@@ -42,19 +42,20 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
 
   def root =
     path("ping") { complete { "OK" } } ~
-    pathPrefix("min-elevation") { minElevationRoute } ~
+    pathPrefix("elevation") { elevationRoute } ~
     pathPrefix("flood-percentages") { floodPercentagesRoute } ~
     pathPrefix("flood-tiles") { floodTilesRoute }
 
-  def minElevationRoute =
+  def elevationRoute =
     cors {
       import spray.json.DefaultJsonProtocol._
 
-      entity(as[minElevationArgs]) { (args) =>
+      entity(as[elevationArgs]) { (args) =>
         complete {
           future {
             val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, nativeCRS)
             JsObject(
+              "maxElevation" -> JsNumber(MaxElevation(multiPolygon)),
               "minElevation" -> JsNumber(MinElevation(multiPolygon))
             )
           }
