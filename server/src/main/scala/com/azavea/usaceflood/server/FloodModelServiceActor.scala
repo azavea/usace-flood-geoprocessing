@@ -35,6 +35,10 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
     `Access-Control-Allow-Methods`(GET, POST, OPTIONS, DELETE),
     `Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Accept-Language, Host, Referer, User-Agent, Access-Control-Request-Method, Access-Control-Request-Headers"))
 
+  val lightestColor = 0xc2dae8
+  val darkestColor = 0x393264
+  val colorTransparency = 0xb3
+
   def cors: Directive0 = {
     val rh = implicitly[RejectionHandler]
     respondWithHeaders(corsHeaders) & handleRejections(rh)
@@ -92,16 +96,7 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
                   val floodTile = FloodTile(tile, zoom, key, multiPolygon, args.minElevation, args.floodLevel)
 
                   // Paint the tile
-                  val breaks = ColorBreaks.fromStringDouble(
-                    """0.0000:c2dae8b3;
-                      |0.3048:a0bcd9b3;
-                      |0.6096:7c9fc7b3;
-                      |0.9144:4b81b3b3;
-                      |1.2192:2c6ca0b3;
-                      |1.5240:3d5485b3;
-                      |3.0480:414273b3;
-                      |4.5720:393264b3;
-                      |1000.0:393264b3;""".stripMargin).get
+                  val breaks = getColorBreaksForRange(args.maxElevation, args.minElevation, 20)
                   floodTile.renderPng(breaks).bytes
 
                 case None =>
@@ -112,4 +107,12 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
         }
       }
     }
+
+  def getColorBreaksForRange(maxElevation: Double, minElevation: Double, ticks: Int): ColorBreaks = {
+    val tick = (maxElevation - minElevation) / ticks
+    val breaks = (1 to ticks).toArray.map(_ * tick)
+    val colors = ColorRamp.createWithRGBColors(lightestColor, darkestColor).setAlpha(colorTransparency).interpolate(ticks).toArray
+
+    ColorBreaks(breaks, colors)
+  }
 }
