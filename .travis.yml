@@ -12,7 +12,10 @@ cache:
 
 script:
 - mkdir -p ${HOME}/.sbt
-- docker run -v ${HOME}/.ivy2:/root/.ivy2 -v ${HOME}/.sbt:/root/.sbt -v ${PWD}:/usace-flood-geoprocessing -w /usace-flood-geoprocessing quay.io/azavea/scala:2.10.5 ./sbt "project server" compile
+- export TRAVIS_TAG=0.2.0
+- docker run -e "TRAVIS_TAG=$TRAVIS_TAG" -v ${HOME}/.ivy2:/root/.ivy2 -v ${HOME}/.sbt:/root/.sbt -v ${PWD}:/usace-flood-geoprocessing -w /usace-flood-geoprocessing quay.io/azavea/scala:2.10.5 ./sbt "project server" assembly
+- sudo chown ${USER} server/target/scala-2.10/usaceflood-server-assembly-${TRAVIS_TAG}.jar
+#- docker run -v ${HOME}/.ivy2:/root/.ivy2 -v ${HOME}/.sbt:/root/.sbt -v ${PWD}:/usace-flood-geoprocessing -w /usace-flood-geoprocessing quay.io/azavea/scala:2.10.5 ./sbt "project server" compile
 
 before_deploy:
 - docker run -e "TRAVIS_TAG=$TRAVIS_TAG" -v ${HOME}/.ivy2:/root/.ivy2 -v ${HOME}/.sbt:/root/.sbt -v ${PWD}:/usace-flood-geoprocessing -w /usace-flood-geoprocessing quay.io/azavea/scala:2.10.5 ./sbt "project server" assembly
