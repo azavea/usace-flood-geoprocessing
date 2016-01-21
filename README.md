@@ -21,7 +21,7 @@ To build the ingest JAR, execute the following:
 $ ./sbt "project ingest" assembly
 ```
 
-which should result in `ingest/target/scala-2.10/usaceflood-ingest-assembly-SNAPSHOT.jar`.
+which should result in `ingest/target/scala-2.10/usaceflood-ingest-assembly-<version>-SNAPSHOT.jar`.
 
 ### Usage
 
@@ -30,7 +30,7 @@ We ingest the two tile sets one by one. For the purposes of calculating area, we
 ```bash
 #!/bin/bash
 
-JAR=ingest/target/scala-2.10/usaceflood-ingest-assembly-SNAPSHOT.jar
+JAR=ingest/target/scala-2.10/usaceflood-ingest-assembly-<version>-SNAPSHOT.jar
 
 SOURCE=~/data/tiles-4269
 DEST=~/data/catalog
@@ -48,7 +48,7 @@ For the purposes of rendering tiles, we want the WebMercator projection and we w
 ```bash
 #!/bin/bash
 
-JAR=ingest/target/scala-2.10/usaceflood-ingest-assembly-SNAPSHOT.jar
+JAR=ingest/target/scala-2.10/usaceflood-ingest-assembly-<version>-SNAPSHOT.jar
 
 SOURCE=~/data/tiles-webm
 DEST=~/data/catalog
@@ -172,7 +172,7 @@ To build the server JAR, execute the following:
 $ ./sbt "project server" assembly
 ```
 
-which should result in `server/target/scala-2.10/usaceflood-server-assembly-SNAPSHOT.jar`.
+which should result in `server/target/scala-2.10/usaceflood-server-assembly-<version>-SNAPSHOT.jar`.
 
 ### Usage
 
@@ -190,7 +190,7 @@ For running the server locally, assuming the catalog is available in `~/data/cat
 
 ```bash
 $ export RDD_CATALOG_PATH=~/data/catalog
-$ spark-submit server/target/scala-2.10/usaceflood-server-assembly-SNAPSHOT.jar
+$ spark-submit server/target/scala-2.10/usaceflood-server-assembly-<version>-SNAPSHOT.jar
 ```
 
 As Spark loads the JAR it will output a number of messages. Once the following are shown, the server is ready to accept requests:
@@ -206,11 +206,12 @@ The server can be stopped with <kbd>Ctrl</kbd> + <kbd>C</kbd>.
 
 To test locally, after the JAR is built, it should be placed under `/opt/geoprocessing/` inside the VM.
 
-Deployments to GitHub Releases are handled via [Travis-CI](https://travis-ci.org/azavea/usace-flood-geoprocessing). The following `git-flow` commands signal to Travis that we want to create a release:
+Deployments to GitHub Releases are handled via [Travis-CI](https://travis-ci.org/azavea/usace-flood-geoprocessing). The following `git-flow` commands signal to Travis that we want to create a release. The `version` variable should be updated in `project/Version.scala.`
 
 ``` bash
 $ git flow release start 0.1.0
 $ vim CHANGELOG.md
+$ vim project/Version.scala
 $ git commit -m "0.1.0"
 $ git flow release publish 0.1.0
 $ git flow release finish 0.1.0
