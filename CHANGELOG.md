@@ -1,3 +1,7 @@
+## 0.1.3
+
+- Fix a problem in .travis.yml
+
 ## 0.1.2
 
 - Fix a problem in .travis.yml
