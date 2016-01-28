@@ -4,7 +4,7 @@ object Version {
   def either(environmentVariable: String, default: String): String =
     Properties.envOrElse(environmentVariable, default)
 
-  val version = "0.1.3"
+  val version = "0.1.4"
   val floodmodel = version + either("FLOODMODEL_VERSION_SUFFIX", "-SNAPSHOT")
 
   val scala = "2.10.6"
