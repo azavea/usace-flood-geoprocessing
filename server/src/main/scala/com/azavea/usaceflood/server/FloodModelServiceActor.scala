@@ -35,9 +35,11 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
     `Access-Control-Allow-Methods`(GET, POST, OPTIONS, DELETE),
     `Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Accept-Language, Host, Referer, User-Agent, Access-Control-Request-Method, Access-Control-Request-Headers"))
 
-  val lightestColor = 0xc2dae8
-  val darkestColor = 0x393264
-  val colorTransparency = 0xb3
+  val LIGHTEST_COLOR = 0xB5D1E8 // Pantone 277
+  val DARKEST_COLOR = 0x002B7F  // Pantone 280
+  val MAIN_ALPHA = 0xAB  // 66% visible
+  val FINAL_ALPHA = 0xB3 // 70% visible
+  val FINAL_BREAK = 500.0
 
   def cors: Directive0 = {
     val rh = implicitly[RejectionHandler]
@@ -96,7 +98,7 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
                   val floodTile = FloodTile(tile, zoom, key, multiPolygon, args.minElevation, args.floodLevel)
 
                   // Paint the tile
-                  val breaks = getColorBreaksForRange(args.maxElevation, args.minElevation, 20)
+                  val breaks = getColorBreaksForRange(args.maxElevation, args.minElevation, 7)
                   floodTile.renderPng(breaks).bytes
 
                 case None =>
@@ -110,8 +112,15 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
 
   def getColorBreaksForRange(maxElevation: Double, minElevation: Double, ticks: Int): ColorBreaks = {
     val tick = (maxElevation - minElevation) / ticks
-    val breaks = (1 to ticks).toArray.map(_ * tick)
-    val colors = ColorRamp.createWithRGBColors(lightestColor, darkestColor).setAlpha(colorTransparency).interpolate(ticks).toArray
+
+    // Calculate main breaks, and add a really large one at the end
+    val main_breaks = (1 to ticks).toArray.map(_ * tick)
+    val breaks = main_breaks :+ FINAL_BREAK
+
+    // Calculate main colors, and add the darkest color at the end
+    val main_colors = ColorRamp.createWithRGBColors(LIGHTEST_COLOR, DARKEST_COLOR).setAlpha(MAIN_ALPHA).interpolate(ticks).toArray
+    val final_color = ColorRamp.createWithRGBColors(DARKEST_COLOR).setAlpha(FINAL_ALPHA).toArray
+    val colors = main_colors ++ final_color
 
     ColorBreaks(breaks, colors)
   }
