@@ -50,7 +50,8 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
     path("ping") { complete { "OK" } } ~
     pathPrefix("elevation") { elevationRoute } ~
     pathPrefix("flood-percentages") { floodPercentagesRoute } ~
-    pathPrefix("flood-tiles") { floodTilesRoute }
+    pathPrefix("flood-tiles") { floodTilesRoute } ~
+    pathPrefix("flood-values") { floodValuesRoute }
 
   def elevationRoute =
     cors {
@@ -110,6 +111,27 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
       }
     }
 
+  def floodValuesRoute =
+    pathPrefix(IntNumber / IntNumber / IntNumber) { (zoom, x, y) =>
+      import spray.json.DefaultJsonProtocol._
+
+      entity(as[floodTilesArgs]) { (args) =>
+        complete {
+          val multiPolygon = args.multiPolygon.toString().parseGeoJson[MultiPolygon].reproject(LatLng, WebMercator)
+          val key = SpatialKey(x, y)
+
+          ElevationData(zoom, key, multiPolygon) match {
+            case Some(tile) =>
+              val floodTile = FloodTile(tile, zoom, key, multiPolygon, args.minElevation, args.floodLevel)
+              renderAsValueGrid(floodTile)
+
+            case None =>
+              Array.ofDim[Double](256,256)
+          }
+        }
+      }
+    }
+
   def getColorBreaksForRange(maxElevation: Double, minElevation: Double, ticks: Int): ColorBreaks = {
     val tick = (maxElevation - minElevation) / ticks
 
@@ -124,4 +146,13 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
 
     ColorBreaks(breaks, colors)
   }
+
+  def renderAsValueGrid(tile: Tile) = JsArray({
+    for (r <- 0 until tile.rows) yield JsArray({
+      for (c <- 0 until tile.cols) yield {
+        val v = tile.getDouble(c, r)
+        if (isNoData(v)) JsNull else JsNumber(v)
+      }
+    }.toVector)
+  }.toVector)
 }
