@@ -21,12 +21,24 @@ object FloodPointValue {
     */
   def apply(tile: Tile, extent: Extent, point: Point, minElevation: Double, floodLevel: Double)(implicit sc: SparkContext): Double = {
     val (col, row) = RasterExtent(extent, tile.cols, tile.rows).mapToGrid(point.x, point.y)
-    val z = tile.getDouble(col, row)
+    val elevation = tile.getDouble(col, row)
 
-    if (isData(z) && z - minElevation < floodLevel) {
-      floodLevel - (z - minElevation)
+    getFlooding(elevation, minElevation, floodLevel)
+  }
+
+  /**
+    * Given the elevation value at a point, and a minElevation and floodLevel,
+    * returns the flood value at that point.
+    *
+    * @param       elevation    Elevation of this point
+    * @param       minElevation Minimum elevation of the polygon in which this point belongs
+    * @param       floodLevel   Flood level to use for determining cell flooding
+    * @return
+    */
+  def getFlooding(elevation: Double, minElevation: Double, floodLevel: Double): Double =
+    if (isData(elevation) && elevation - minElevation < floodLevel) {
+      floodLevel - (elevation - minElevation)
     } else {
       Double.NaN
     }
-  }
 }

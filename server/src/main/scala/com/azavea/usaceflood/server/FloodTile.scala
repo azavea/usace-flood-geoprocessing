@@ -23,12 +23,6 @@ object FloodTile {
     val extent = ElevationData.getExtent(zoom, key)
     val maskedTile = tile.mask(extent, multiPolygon)
 
-    maskedTile.mapDouble { z =>
-      if (isData(z) && z - minElevation < floodLevel) {
-        floodLevel - (z - minElevation)
-      } else {
-        Double.NaN
-      }
-    }
+    maskedTile.mapDouble { elevation => FloodPointValue.getFlooding(elevation, minElevation, floodLevel) }
   }
 }
