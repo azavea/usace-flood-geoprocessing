@@ -50,7 +50,8 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
     path("ping") { complete { "OK" } } ~
     pathPrefix("elevation") { elevationRoute } ~
     pathPrefix("flood-percentages") { floodPercentagesRoute } ~
-    pathPrefix("flood-tiles") { floodTilesRoute }
+    pathPrefix("flood-tiles") { floodTilesRoute } ~
+    pathPrefix("flood-value") { floodValueRoute }
 
   def elevationRoute =
     cors {
@@ -105,6 +106,26 @@ class FloodModelServiceActor(sc: SparkContext) extends Actor with HttpService {
                   ArrayTile.empty(TypeByte, 256, 256).renderPng().bytes
               }
             }
+          }
+        }
+      }
+    }
+
+  def floodValueRoute =
+    pathPrefix(IntNumber / IntNumber / IntNumber) { (zoom, x, y) =>
+      import spray.json.DefaultJsonProtocol._
+
+      entity(as[floodValueArgs]) { (args) =>
+        complete {
+          future {
+            val key = SpatialKey(x, y)
+            val point = Point(args.lng, args.lat).reproject(LatLng, WebMercator)
+            val tile = ElevationData(zoom, key)
+            val extent = ElevationData.getExtent(zoom, key)
+
+            JsObject(
+              "floodValue" -> JsNumber(FloodPointValue(tile, extent, point, args.minElevation, args.floodLevel))
+            )
           }
         }
       }
