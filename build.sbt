@@ -14,16 +14,16 @@ lazy val commonSettings = Seq(
     "-language:existentials",
     "-feature"),
 
-  resolvers += Resolver.bintrayRepo("azavea", "geotrellis"),
+  resolvers += "LocationTech GeoTrellis Releases" at "https://mvnrepository.com/artifact/org.locationtech.geotrellis/",
 
   shellPrompt := { s => Project.extract(s).currentProject.id + " > " }
 ) ++ net.virtualvoid.sbt.graph.Plugin.graphSettings
 
-lazy val root = 
+lazy val root =
   Project("usaceflood", file("."))
     .aggregate(ingest, server)
 
-lazy val ingest = 
+lazy val ingest =
   Project("ingest", file("ingest"))
   .settings(commonSettings: _*)
 

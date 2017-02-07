@@ -7,7 +7,7 @@ javaOptions += "-Xmx2G"
 javaOptions += "-Djava.library.path=/usr/local/lib"
 
 libraryDependencies ++= Seq(
-  "com.azavea.geotrellis" %% "geotrellis-spark" % Version.geotrellis,
+  "org.locationtech.geotrellis" %% "geotrellis-spark" % Version.geotrellis,
   "org.apache.spark" %% "spark-core" % Version.spark % "provided",
   "org.apache.hadoop" % "hadoop-client" % Version.hadoop % "provided"
 )
