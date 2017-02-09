@@ -1,6 +1,6 @@
 sudo: required
 
-language: scala
+language: bash
 
 services:
 - docker
@@ -12,19 +12,34 @@ cache:
 
 script:
 - mkdir -p ${HOME}/.sbt
-- docker run -v ${HOME}/.ivy2:/root/.ivy2 -v ${HOME}/.sbt:/root/.sbt -v ${PWD}:/usace-flood-geoprocessing -w /usace-flood-geoprocessing quay.io/azavea/spark:latest ./sbt "project server" compile
+- docker-compose -f docker-compose.ci.yml run compile
 
 before_deploy:
-- docker run -v ${HOME}/.ivy2:/root/.ivy2 -v ${HOME}/.sbt:/root/.sbt -v ${PWD}:/usace-flood-geoprocessing -w /usace-flood-geoprocessing quay.io/azavea/spark:latest ./sbt "project server" assembly
-- sudo chown ${USER} server/target/scala-2.10/usaceflood-server-assembly-${TRAVIS_TAG}-SNAPSHOT.jar
+  - docker login -e . -p "${QUAY_PASSWORD}" -u "${QUAY_USER}" quay.io
+  - docker-compose -f docker-compose.ci.yml run assembly
+  - sudo chown ${USER} server/target/scala-2.11/usaceflood-geop-assembly-*.jar
 
 deploy:
-  provider: releases
-  api_key:
-    secure: V0yjW7wr+ke9pdVbwvgghBHgCM1/dobiOcmopdTT6aXG8oZew7GB60dx9GbUCYpCqM534/O2r0vDSm1D1z83ctAz6n9L1HZiHbOC9u1kjcYOzjdl1I/5qXteRSZ6a0PR8gvxSVjEwCbDqIKi9nggCcrUB8ZEfmo6GSBouuNUpVxfL4V+3oX/FswpexL73Z0HKNSyS44lOg2u8zhVlUpxZkMDpWw+tLbYw7n/dtGfkQ/bA2nADTXv2UZalwlhZXOGMf0up67INmseAaQcnLwNZqOacR9QrYmdoQUS97yug2lt7HHmzHHqhhboGnUy5YdxY0eUwWaflUXkH9E3an1UfOl61qbWYNEO0xxKG1dK78/DspcFYt6TfKtNKyYHbrw/VaZeiMYR8qPC8iyhEoQVaRxZ7zIL0A5Cj0hiRreppuWzU9xGGj4HgFxHEJfCQSeORVDS8c385MjbFjzvOvTPs7mdimvama79x4iWB+DruMygVBIUu/K0rJIMslmjkD5VJGBL9el8HyaQQN1w+tR0HCCEzNAtDV+tHOGoFuoQpFzfyZBFB2Iax5cFSkpC5BsdPESCHwrLsHCoBFoJTYS/QnXaq9F1HHzRM8FJBNzsw2dIprG8+mqFy7Amy3X1uq3XsEu1WFKmp0WLCfR9vw8FMRFAy3sg1hikiy2g0zUwFvw=
-  file:
-    - server/target/scala-2.10/usaceflood-server-assembly-${TRAVIS_TAG}-SNAPSHOT.jar
-  skip_cleanup: true
-  on:
-    repo: azavea/usace-flood-geoprocessing
-    tags: true
+  - provider: releases
+    api_key:
+      secure: V0yjW7wr+ke9pdVbwvgghBHgCM1/dobiOcmopdTT6aXG8oZew7GB60dx9GbUCYpCqM534/O2r0vDSm1D1z83ctAz6n9L1HZiHbOC9u1kjcYOzjdl1I/5qXteRSZ6a0PR8gvxSVjEwCbDqIKi9nggCcrUB8ZEfmo6GSBouuNUpVxfL4V+3oX/FswpexL73Z0HKNSyS44lOg2u8zhVlUpxZkMDpWw+tLbYw7n/dtGfkQ/bA2nADTXv2UZalwlhZXOGMf0up67INmseAaQcnLwNZqOacR9QrYmdoQUS97yug2lt7HHmzHHqhhboGnUy5YdxY0eUwWaflUXkH9E3an1UfOl61qbWYNEO0xxKG1dK78/DspcFYt6TfKtNKyYHbrw/VaZeiMYR8qPC8iyhEoQVaRxZ7zIL0A5Cj0hiRreppuWzU9xGGj4HgFxHEJfCQSeORVDS8c385MjbFjzvOvTPs7mdimvama79x4iWB+DruMygVBIUu/K0rJIMslmjkD5VJGBL9el8HyaQQN1w+tR0HCCEzNAtDV+tHOGoFuoQpFzfyZBFB2Iax5cFSkpC5BsdPESCHwrLsHCoBFoJTYS/QnXaq9F1HHzRM8FJBNzsw2dIprG8+mqFy7Amy3X1uq3XsEu1WFKmp0WLCfR9vw8FMRFAy3sg1hikiy2g0zUwFvw=
+    file:
+      - server/target/scala-2.11/usaceflood-server-assembly-${TRAVIS_TAG}-SNAPSHOT.jar
+    skip_cleanup: true
+    on:
+      repo: azavea/usace-flood-geoprocessing
+      tags: true
+
+  - provider: script
+    script: "scripts/cibuild.sh"
+    skip_cleanup: true
+    on:
+      repo: azavea/usace-flood-model-geoprocessing
+      branch: develop
+
+  - provider: script
+    script: "scripts/cibuild.sh"
+    skip_cleanup: true
+    on:
+      repo: azavea/usace-flood-model-geoprocessing
+      tags: true

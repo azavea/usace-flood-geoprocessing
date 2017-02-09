@@ -1,0 +1,19 @@
+assembly:
+  image: quay.io/azavea/spark:2.1.0
+  volumes:
+    - ./:/usace-flood-geoprocessing
+    - ${HOME}/.ivy2:/root/.ivy2
+    - ${HOME}/.sbt:/root/.sbt
+  working_dir: /usace-flood-geoprocessing
+  entrypoint: ./sbt
+  command: '"project server" assembly'
+
+compile:
+  image: quay.io/azavea/spark:2.1.0
+  volumes:
+    - ./:/usace-flood-geoprocessing
+    - ${HOME}/.ivy2:/root/.ivy2
+    - ${HOME}/.sbt:/root/.sbt
+  working_dir: /usace-flood-geoprocessing
+  entrypoint: ./sbt
+  command: '"project server" compile'
